@@ -5,6 +5,8 @@ import ErrorPage from "./pages/ErrorPage";
 import RootLayout from "./RootLayout";
 import { createBrowserRouter, RouterProvider } from "react-router";
 import Contact from "./pages/Contact";
+import firebaseConfig from "./pages/firebase.config";
+
 
 function App() {
   const router = createBrowserRouter([

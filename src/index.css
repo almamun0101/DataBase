@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 body{
-    background: gray;
+    /* background: gray; */
 }
 .container{
     width: 1100px;
