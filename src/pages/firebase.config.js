@@ -7,6 +7,7 @@ import { initializeApp } from "firebase/app";
 const firebaseConfig = {
   apiKey: "AIzaSyBeqkXu9ZdXRfrv0u0lqaB-41uMFFepseY",
   authDomain: "crud-90edf.firebaseapp.com",
+  databaseURL: "https://crud-90edf-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "crud-90edf",
   storageBucket: "crud-90edf.firebasestorage.app",
   messagingSenderId: "1030542276378",
@@ -15,4 +16,5 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+
 export default firebaseConfig;

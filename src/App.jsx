@@ -6,6 +6,7 @@ import RootLayout from "./RootLayout";
 import { createBrowserRouter, RouterProvider } from "react-router";
 import Contact from "./pages/Contact";
 import firebaseConfig from "./pages/firebase.config";
+import Udpate from "./pages/Udpate";
 
 
 function App() {
@@ -29,6 +30,10 @@ function App() {
         }
       ],
     },
+    {
+      path:"/edit",
+      element:<Udpate/>
+    }
   ]);
 
   return <RouterProvider router={router} />;
