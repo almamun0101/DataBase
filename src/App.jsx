@@ -8,13 +8,12 @@ import Contact from "./pages/Contact";
 import firebaseConfig from "./pages/firebase.config";
 import Udpate from "./pages/Udpate";
 
-
 function App() {
   const router = createBrowserRouter([
     {
       path: "/",
       Component: RootLayout,
-      errorElement:<ErrorPage/>,
+      errorElement: <ErrorPage />,
       children: [
         {
           index: true,
@@ -27,13 +26,13 @@ function App() {
         {
           path: "/contact",
           element: <Contact />,
-        }
+        },
+        {
+          path: "/edit",
+          element: <Udpate />,
+        },
       ],
     },
-    {
-      path:"/edit",
-      element:<Udpate/>
-    }
   ]);
 
   return <RouterProvider router={router} />;

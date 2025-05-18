@@ -12,8 +12,12 @@ import { MdDelete } from "react-icons/md";
 import { CiEdit } from "react-icons/ci";
 import { useNavigate } from "react-router";
 import firebaseConfig from "./firebase.config";
+import Skeleton from "./Skeleton";
+import { TfiFaceSad } from "react-icons/tfi";
+import { ImHappy } from "react-icons/im";
 
 const Home = () => {
+  const now = new Date();
   const db = getDatabase();
   const [input, setInput] = useState("");
   const [task, setTask] = useState([]);
@@ -23,7 +27,10 @@ const Home = () => {
   const navigate = useNavigate();
 
   const handleInput = (e) => {
-    setInput(e.target.value);
+    const value = e.target.value;
+    const formated = value.charAt(0).toUpperCase() + value.slice(1);
+    setInput(formated);
+    console.log(input);
     setIsInputValid(true);
   };
 
@@ -32,6 +39,15 @@ const Home = () => {
       set(push(ref(db, "todolist/")), {
         name: input,
         done: taskdone,
+        time: now.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        }),
+        date: now.toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+        }),
       })
         .then(() => {
           toast.success("Task Added Successfully!");
@@ -41,7 +57,7 @@ const Home = () => {
           console.log(err);
         });
     } else {
-      toast.error("The Task Is Blank ");
+      toast.error("The Task Is Blank");
       setIsInputValid(false);
     }
   };
@@ -53,11 +69,12 @@ const Home = () => {
   const handleDeleteTask = (id) => {
     remove(ref(db, "todolist/" + id));
   };
+
   const handleLiClick = (id) => {
     console.log(id);
   };
 
-  function FetchData() {
+  const FetchData = () => {
     const todolist = ref(db, "todolist/");
     onValue(todolist, (snapshot) => {
       let arr = [];
@@ -67,9 +84,8 @@ const Home = () => {
       setTask(arr);
     });
     setLoading(false);
-  }
+  };
 
-  //Raed Data
   useEffect(() => {
     FetchData();
   }, []);
@@ -79,14 +95,14 @@ const Home = () => {
       <div className="text-center">
         <Toaster />
         <h2 className="text-xl font-bold mt-5">Add Your Task</h2>
+
         <div className="flex mx-auto gap-2 items-center mt-5 justify-center">
           <input
             value={input}
             onChange={handleInput}
-            className={`
-              ${
-                isInputValid ? "border-green-500" : "border-red-400"
-              } focus:outline-none border-2 rounded-2xl p-2 px-10`}
+            className={`${
+              isInputValid ? "border-green-500" : "border-red-400"
+            } focus:outline-none border-2 rounded-2xl p-2 px-10`}
             placeholder="New Task..."
             type="text"
           />
@@ -98,81 +114,57 @@ const Home = () => {
           </button>
         </div>
 
-        <div className="mt-5 mx-auto w-90">
+        <div className="mt-5 mx-auto w-120">
           <h2 className="text-left text-lg font-medium">
-            {/* {task.map((i)=>{(i<0)?"Tak":"No task"})} */}
+            {task.length === 0 ? (
+              <div className="flex items-center gap-5">
+                <h2>No Task Found</h2>
+                <TfiFaceSad />
+              </div>
+            ) : (
+              <div className="flex items-center gap-5">
+                <h2>Tasks Are Here :-</h2>
+                <ImHappy />
+              </div>
+            )}
           </h2>
+
           {loading ? (
-            
-<div role="status" class="max-w-md p-4 space-y-4 border border-gray-200 divide-y divide-gray-200 rounded-sm shadow-sm animate-pulse dark:divide-gray-700 md:p-6 dark:border-gray-700">
-    <div class="flex items-center justify-between">
-        <div>
-            <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-600 w-24 mb-2.5"></div>
-            <div class="w-32 h-2 bg-gray-200 rounded-full dark:bg-gray-700"></div>
-        </div>
-        <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-700 w-12"></div>
-    </div>
-    <div class="flex items-center justify-between pt-4">
-        <div>
-            <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-600 w-24 mb-2.5"></div>
-            <div class="w-32 h-2 bg-gray-200 rounded-full dark:bg-gray-700"></div>
-        </div>
-        <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-700 w-12"></div>
-    </div>
-    <div class="flex items-center justify-between pt-4">
-        <div>
-            <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-600 w-24 mb-2.5"></div>
-            <div class="w-32 h-2 bg-gray-200 rounded-full dark:bg-gray-700"></div>
-        </div>
-        <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-700 w-12"></div>
-    </div>
-    <div class="flex items-center justify-between pt-4">
-        <div>
-            <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-600 w-24 mb-2.5"></div>
-            <div class="w-32 h-2 bg-gray-200 rounded-full dark:bg-gray-700"></div>
-        </div>
-        <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-700 w-12"></div>
-    </div>
-    <div class="flex items-center justify-between pt-4">
-        <div>
-            <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-600 w-24 mb-2.5"></div>
-            <div class="w-32 h-2 bg-gray-200 rounded-full dark:bg-gray-700"></div>
-        </div>
-        <div class="h-2.5 bg-gray-300 rounded-full dark:bg-gray-700 w-12"></div>
-    </div>
-    <span class="sr-only">Loading...</span>
-</div>
-``
+            <Skeleton />
           ) : (
-            <div className="text-left mt-2 ">
+            <div className="text-left mt-2">
               <ul>
-                {task.map((item, i, id) => (
+                {task.map((item, i) => (
                   <li
+                    key={item.id}
+                    onClick={() => handleLiClick(item.id)}
                     className={`${
                       taskdone && "line-through"
                     } hover:border hover:border-black border border-b-black border-transparent py-2 px-3 rounded-lg flex items-center justify-between my-3`}
-                    onClick={() => {
-                      handleLiClick(item.id);
-                    }}
-                    key={item.id}
                   >
-                    <p className={`${item.done ? "line-through" : ""}`}>{`${
-                      i + 1
-                    } .  ${item.name} `}</p>
+                    <div className="w-2/3">
+                      <h2
+                        className={`${
+                          item.done ? "line-through" : ""
+                        }text-lg font-medium`}
+                      >
+                        {`${i + 1} .  ${item.name}`}
+                      </h2>
+                      <div className="flex justify-between">
+                        <p>{item.time}</p>
+                        <p>{item.date}</p>
+                      </div>
+                    </div>
                     <div className="flex gap-6 items-center">
                       <button
                         className="hover:text-2xl"
-                        onClick={() => {
-                          handleEditTask(item.id);
-                        }}
+                        onClick={() => handleEditTask(item.id)}
                       >
                         <CiEdit />
                       </button>
                       <button
                         className="hover:text-2xl"
-                        onClick={() => {
-                          handleDeleteTask(item.id);
-                        }}
+                        onClick={() => handleDeleteTask(item.id)}
                       >
                         <MdDelete />
                       </button>
@@ -182,7 +174,6 @@ const Home = () => {
               </ul>
             </div>
           )}
-         
         </div>
       </div>
     </div>
