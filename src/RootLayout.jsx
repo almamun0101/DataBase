@@ -7,7 +7,7 @@ import About from './pages/About'
 const RootLayout = () => {
   return (
     <div>
-      <Navbar/>
+     
       <Outlet></Outlet>
     </div>
   )

@@ -6,12 +6,13 @@ import {
   set,
   onValue,
   remove,
+  update,
 } from "firebase/database";
 import toast, { Toaster } from "react-hot-toast";
 import { MdDelete } from "react-icons/md";
 import { CiEdit } from "react-icons/ci";
 import { useNavigate } from "react-router";
-import firebaseConfig from "./firebase.config";
+import firebaseConfig from "./firebase.config"; // Assuming Firebase is initialized here
 import Skeleton from "./Skeleton";
 import { TfiFaceSad } from "react-icons/tfi";
 import { ImHappy } from "react-icons/im";
@@ -20,25 +21,31 @@ const Home = () => {
   const now = new Date();
   const db = getDatabase();
   const [input, setInput] = useState("");
+  const [updateInput, setUpdateInput] = useState("");
+  const [editTaskId, setEditTaskId] = useState(null);
   const [task, setTask] = useState([]);
   const [isInputValid, setIsInputValid] = useState(true);
-  const [taskdone, setTaskDone] = useState(false);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   const handleInput = (e) => {
     const value = e.target.value;
-    const formated = value.charAt(0).toUpperCase() + value.slice(1);
-    setInput(formated);
-    console.log(input);
+    const formatted = value.charAt(0).toUpperCase() + value.slice(1);
+    setInput(formatted);
     setIsInputValid(true);
   };
 
+  const handleUpdateInput = (e) => {
+    const value = e.target.value;
+    const formatted = value.charAt(0).toUpperCase() + value.slice(1);
+    setUpdateInput(formatted);
+  };
+
   const handleAddBtn = () => {
-    if (input) {
-      set(push(ref(db, "todolist/")), {
+    if (input.trim()) {
+      const newTask = {
         name: input,
-        done: taskdone,
+        done: false,
         time: now.toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
@@ -48,13 +55,16 @@ const Home = () => {
           month: "long",
           day: "numeric",
         }),
-      })
+      };
+
+      set(push(ref(db, "todolist/")), newTask)
         .then(() => {
           toast.success("Task Added Successfully!");
           setInput("");
         })
         .catch((err) => {
-          console.log(err);
+          toast.error("Failed to add task.");
+          console.error(err);
         });
     } else {
       toast.error("The Task Is Blank");
@@ -62,28 +72,74 @@ const Home = () => {
     }
   };
 
-  const handleEditTask = (id) => {
-    navigate("/edit");
+  const handleEditTask = (id, name) => {
+    setEditTaskId(id);
+    setUpdateInput(name);
   };
 
   const handleDeleteTask = (id) => {
-    remove(ref(db, "todolist/" + id));
+    remove(ref(db, "todolist/" + id))
+      .then(() => toast.success("Task deleted"))
+      .catch(() => toast.error("Failed to delete task"));
   };
 
-  const handleLiClick = (id) => {
-    console.log(id);
+  const handleCheckboxToggle = (id, currentstatus) => {
+    const updatetask = task.find((t) => t.id === id);
+    if (updatetask) {
+      const taskref = ref(db, `todolist/${id}`);
+      set(taskref, {
+        ...updatetask,
+        done: !currentstatus,
+      })
+        .then(() => {
+          toast.success("Task status updated!");
+        })
+        .catch((error) => {
+          toast.error("Failed to update task status.");
+          console.error(error);
+        });
+    }
+  };
+
+  const handleUpdateTask = (id) => {
+    if (!updateInput.trim()) {
+      toast.error("Updated task cannot be empty");
+      return;
+    }
+
+    update(ref(db, "todolist/" + id), {
+      name: updateInput,
+      time: now.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      }),
+      date: now.toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+      }),
+    })
+      .then(() => {
+        toast.success("Task Updated");
+        setEditTaskId(null);
+        setUpdateInput("");
+      })
+      .catch((err) => {
+        toast.error("Failed to update task");
+        console.error(err);
+      });
   };
 
   const FetchData = () => {
-    const todolist = ref(db, "todolist/");
-    onValue(todolist, (snapshot) => {
+    const todolistRef = ref(db, "todolist/");
+    onValue(todolistRef, (snapshot) => {
       let arr = [];
       snapshot.forEach((item) => {
-        arr.push({ ...item.val(), id: item.key, status: item.done });
+        arr.push({ ...item.val(), id: item.key });
       });
       setTask(arr);
+      setLoading(false);
     });
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -91,88 +147,130 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="container mx-auto">
-      <div className="text-center">
-        <Toaster />
-        <h2 className="text-xl font-bold mt-5">Add Your Task</h2>
+    <div className="container mx-auto px-4 py-8">
+      <Toaster />
+      <div className="text-center bg-white rounded-xl p-6">
+        <h2 className="text-2xl font-extrabold text-gray-800">Add Your Task</h2>
 
-        <div className="flex mx-auto gap-2 items-center mt-5 justify-center">
+        <div className="flex flex-col sm:flex-row gap-3 items-center justify-center mt-6">
           <input
             value={input}
             onChange={handleInput}
             className={`${
-              isInputValid ? "border-green-500" : "border-red-400"
-            } focus:outline-none border-2 rounded-2xl p-2 px-10`}
+              isInputValid ? "border-blue-500" : "border-red-400"
+            } border-2 rounded-xl px-6 py-3 w-full sm:w-1/2 focus:outline-none focus:ring-2 focus:ring-blue-300`}
             placeholder="New Task..."
             type="text"
           />
           <button
-            className="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-2xl transition"
+            className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-6 py-3 rounded-xl shadow-md hover:shadow-lg transition-all"
             onClick={handleAddBtn}
           >
-            Add
+            ➕ Add Task
           </button>
         </div>
 
-        <div className="mt-5 mx-auto w-120">
-          <h2 className="text-left text-lg font-medium">
-            {task.length === 0 ? (
-              <div className="flex items-center gap-5">
-                <h2>No Task Found</h2>
-                <TfiFaceSad />
-              </div>
-            ) : (
-              <div className="flex items-center gap-5">
-                <h2>Tasks Are Here :-</h2>
-                <ImHappy />
-              </div>
-            )}
-          </h2>
+        <div className="mt-8">
+          <div className="flex justify-center">
+            <h2 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+              {task.length === 0 ? (
+                <>
+                  <TfiFaceSad className="text-lg text-gray-400" /> No Task Found
+                </>
+              ) : (
+                <>
+                  <ImHappy className="text-lg text-green-500" /> Tasks Are Here
+                </>
+              )}
+            </h2>
+          </div>
 
           {loading ? (
             <Skeleton />
           ) : (
-            <div className="text-left mt-2">
-              <ul>
-                {task.map((item, i) => (
-                  <li
-                    key={item.id}
-                    onClick={() => handleLiClick(item.id)}
-                    className={`${
-                      taskdone && "line-through"
-                    } hover:border hover:border-black border border-b-black border-transparent py-2 px-3 rounded-lg flex items-center justify-between my-3`}
-                  >
-                    <div className="w-2/3">
-                      <h2
-                        className={`${
-                          item.done ? "line-through" : ""
-                        }text-lg font-medium`}
-                      >
-                        {`${i + 1} .  ${item.name}`}
-                      </h2>
-                      <div className="flex justify-between">
-                        <p>{item.time}</p>
-                        <p>{item.date}</p>
+            <ul className="mt-4 space-y-4">
+              {task.map((item, i) => (
+                <li
+                  key={item.id}
+                  className={`flex justify-between items-center border rounded-xl p-4 shadow-sm transition-all hover:shadow-lg 
+                    ${
+                      item.done
+                        ? "bg-gray-100 text-gray-500 line-through"
+                        : "bg-white"
+                    }`}
+                >
+                  <div className="flex items-center gap-4 w-full">
+                    <input
+                      type="checkbox"
+                      checked={item.done}
+                      onChange={() => handleCheckboxToggle(item.id, item.done)}
+                      className={`appearance-none w-5 h-5 rounded-full border-4 cursor-pointer transition-all duration-300 ease-in-out ${
+                        item.done
+                          ? "bg-green-500 border-green-300"
+                          : "bg-white border-red-500"
+                      } hover:border-yellow-400`}
+                    />
+
+                    <div className="w-full">
+                      <div className="flex justify-between items-center">
+                        {editTaskId === item.id ? (
+                          <input
+                            value={updateInput}
+                            onChange={handleUpdateInput}
+                            placeholder="Update task..."
+                            type="text"
+                            className="rounded-lg border border-gray-300 p-2 w-full"
+                          />
+                        ) : (
+                          <h3 className="text-lg font-medium">
+                            {i + 1}. {item.name}
+                          </h3>
+                        )}
+                        <div className="text-sm text-gray-400">
+                          <p>{item.time}</p>
+                          <p>{item.date}</p>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex gap-6 items-center">
+                  </div>
+
+                  {editTaskId === item.id ? (
+                    <div className="flex items-center gap-3 ml-4">
                       <button
-                        className="hover:text-2xl"
-                        onClick={() => handleEditTask(item.id)}
+                        onClick={() => handleUpdateTask(item.id)}
+                        className="bg-green-400 text-white px-3 py-2 rounded-xl text-sm"
+                      >
+                        Update
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditTaskId(null);
+                          setUpdateInput("");
+                        }}
+                        className="bg-red-500 text-white px-3 py-2 rounded-xl text-sm"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3 ml-4">
+                      <button
+                        className="text-blue-600 hover:text-blue-800 text-xl"
+                        onClick={() => handleEditTask(item.id, item.name)}
                       >
                         <CiEdit />
                       </button>
                       <button
-                        className="hover:text-2xl"
+                        className="text-red-600 hover:text-red-800 text-xl"
                         onClick={() => handleDeleteTask(item.id)}
                       >
                         <MdDelete />
                       </button>
                     </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
+                  )}
+                </li>
+              ))}
+            </ul>
           )}
         </div>
       </div>
